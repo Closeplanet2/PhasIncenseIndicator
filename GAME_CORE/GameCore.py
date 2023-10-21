@@ -131,6 +131,7 @@ class GameCore:
         if not self.is_signed_in(): return
         user_account = self.UserData.return_user_data(username=self.DatabaseUsername, session_code=self.DatabaseSessionCode, wipe_data=False)
         user_account["DIED"] = True
+        user_account["SMUDGED"] = True
         self.UserData.save_user_data(self.DatabaseUsername, user_account)
 
     def is_signed_in(self):
