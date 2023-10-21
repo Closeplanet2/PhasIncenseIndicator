@@ -1,8 +1,9 @@
-from tkinter import Tk, Label, Button
+from tkinter import Tk, Label, Button, StringVar, Entry
 from CORES.ThreadController import ThreadController
 from PIL import ImageTk, Image
 from enum import Enum
 import time
+import os
 
 class DestructionStage(Enum):
     DESTROY = 0
@@ -40,13 +41,21 @@ class TkinterController:
         if not self.current_window is None:
             self.current_window.add_label(text, bg, fg, w, h, x_pos, y_pos, fs, ff, destroy_status)
 
-    def add_button(self, text="Text Here", function_callback=None, bg="#000000", fg="#FFFFFF", w=10, h=10, x_pos=10, y_pos=10, fs=14, ff="Helvetica", destroy_status=None):
+    def add_button(self, text="Text Here", function_callback=None, thread_function=True, bg="#000000", fg="#FFFFFF", w=10, h=10, x_pos=10, y_pos=10, fs=14, ff="Helvetica", destroy_status=None):
         if not self.current_window is None:
-            self.current_window.add_button(text, function_callback, bg, fg, w, h, x_pos, y_pos, fs, ff, destroy_status)
+            self.current_window.add_button(text, function_callback, thread_function, bg, fg, w, h, x_pos, y_pos, fs, ff, destroy_status)
+
+    def add_image(self, image_path, pos_x=5, pos_y=5, size=None):
+        if not self.current_window is None:
+            self.current_window.add_image(image_path, pos_x, pos_y, size)
 
     def add_image_as_grid(self, card_image, w=5, h=5, pos_x=5, pos_y=5, offset_x=88, offest_y=129, numx=3, numy=2, index=0, destroy_status=None):
         if not self.current_window is None:
             self.current_window.add_image_as_grid(card_image, w, h, pos_x, pos_y, offset_x, offest_y, numx, numy, index, destroy_status)
+
+    def add_entry_field(self, placeholder_text, callback_function=None, pos_x=5, pos_y=5, width=10, destroy_status=None):
+        if not self.current_window is None:
+            self.current_window.add_entry_field(placeholder_text, callback_function, pos_x, pos_y, width, destroy_status)
 
     def widget_thread_callback(self):
         if not self.current_window is None:
@@ -101,17 +110,32 @@ class TkinterClass(Tk):
         if destroy_status is None: destroy_status = DestructionStage.DONT_DESTROY
         self.ignore_destruction[label] = destroy_status
 
-    def add_button(self, text="Text Here", function_callback=None, bg="#000000", fg="#FFFFFF", w=10, h=10, x_pos=10, y_pos=10, fs=14, ff="Helvetica", destroy_status=None):
+    def add_button(self, text="Text Here", function_callback=None, thread_function=True, bg="#000000", fg="#FFFFFF", w=10, h=10, x_pos=10, y_pos=10, fs=14, ff="Helvetica", destroy_status=None):
         def button_callback():
             if function_callback:
-                thread = ThreadController(max_threads=1).load_start(function_callback, daemon=True)
+                if thread_function:
+                    ThreadController(max_threads=1).load_start(function_callback, daemon=True)
+                else:
+                    function_callback(-1, None)
         button = Button(self, text=text, command=button_callback, bg=bg, fg=fg, font=(ff, fs))
         button.place(x=x_pos, y=y_pos)
         button.config(width=w, height=h)
         if destroy_status is None: destroy_status = DestructionStage.DONT_DESTROY
         self.ignore_destruction[button] = destroy_status
 
-    def add_image_as_grid(self, card_image, w=5, h=5, pos_x=5, pos_y=5, offset_x=88, offest_y=129, numx=3, numy=2, index=0, destroy_status=None):
+    def add_image(self, image_path, pos_x=5, pos_y=5, size=None):
+        if not os.path.exists(image_path): return
+        card_image = Image.open(image_path)
+        if not size is None: card_image = card_image.resize((size))
+        render = ImageTk.PhotoImage(card_image)
+        label = Label(self, image=render)
+        label.image = render
+        label.place(x=pos_x, y=pos_y)
+
+    def add_image_as_grid(self, image_path, w=5, h=5, pos_x=5, pos_y=5, offset_x=88, offest_y=129, numx=3, numy=2, index=0, destroy_status=None):
+        if not os.path.exists(image_path): return
+        card_image = Image.open(image_path)
+
         mathx = int(index % numx)
         mathy = int(index / numx)
         posx = pos_x + (mathx * offset_x)
@@ -121,7 +145,20 @@ class TkinterClass(Tk):
         render = ImageTk.PhotoImage(card_image)
         label = Label(self, image=render)
         label.image = render
+        label.configure(highlightthickness=0)
         label.place(x=posx, y=posy)
 
         if destroy_status is None: destroy_status = DestructionStage.DONT_DESTROY
         self.ignore_destruction[label] = destroy_status
+
+    def add_entry_field(self, placeholder_text, callback_function=None, pos_x=5, pos_y=5, width=10, destroy_status=None, fs=14, ff="Helvetica"):
+        var = StringVar()
+        def stored_callback_function(var):
+            if callback_function:
+                callback_function(var)
+        var.trace("w", lambda name, index, mode, var=var: stored_callback_function(var))
+        entry_field = Entry(text=placeholder_text, textvariable=var, font=(ff, fs))
+        entry_field.config(width=width)
+        entry_field.place(x=pos_x, y=pos_y)
+        if destroy_status is None: destroy_status = DestructionStage.DONT_DESTROY
+        self.ignore_destruction[entry_field] = destroy_status
