@@ -21,5 +21,6 @@ class UserData:
         user_data = {}
         user_data["USERNAME"] = username
         user_data['SMUDGED'] = False
+        user_data['DIED'] = False
         user_data["SESSION_CODE"] = session_code
         return user_data

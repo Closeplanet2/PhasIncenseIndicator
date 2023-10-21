@@ -53,9 +53,16 @@ class GameCore:
         )
 
         self.TkinterController.add_button(
-            text="Used Smudge!", function_callback=self.callback_used_smudge, thread_function=False, bg="#FF8181",
+            text="Smudge", function_callback=self.callback_died, thread_function=False, bg="#FF8181",
             fg="#000000",
             w=int(self.GameSettings.window_width / 11), h=1, x_pos=0, y_pos=130,
+            destroy_status=DestructionStage.DONT_DESTROY
+        )
+
+        self.TkinterController.add_button(
+            text="Died", function_callback=self.callback_used_smudge, thread_function=False, bg="#FF8181",
+            fg="#000000",
+            w=int(self.GameSettings.window_width / 11), h=1, x_pos=0, y_pos=170,
             destroy_status=DestructionStage.DONT_DESTROY
         )
 
@@ -70,16 +77,17 @@ class GameCore:
         index = 0
         for user_data in self.UserData.return_all_user_data():
             if not user_data['SESSION_CODE'] == self.DatabaseSessionCode: continue
+            card_image_player = f"IMAGES/ProfileImages/{user_data['USERNAME']}.png" if not user_data['DIED'] else f"IMAGES/ProfileImages/{user_data['USERNAME']}Dead.png"
             self.TkinterController.add_image_as_grid(
-                card_image=f"IMAGES/ProfileImages/{user_data['USERNAME']}.png", w=150, h=150,
-                pos_x=50, pos_y=200, offest_y=145, offset_x=155, numx=2, numy=4, index=index,
+                card_image=card_image_player, w=150, h=150,
+                pos_x=50, pos_y=220, offest_y=145, offset_x=155, numx=2, numy=4, index=index,
                 destroy_status=DestructionStage.DELAYED_DESTROY
             )
             index += 1
-            card_image = "IMAGES/Incense.png" if not user_data['SMUDGED'] else "IMAGES/UsedIncense.png"
+            card_image_incense = "IMAGES/Incense.png" if not user_data['SMUDGED'] else "IMAGES/UsedIncense.png"
             self.TkinterController.add_image_as_grid(
-                card_image=card_image, w=150, h=150,
-                pos_x=50, pos_y=200, offest_y=145, offset_x=155, numx=2, numy=4, index=index,
+                card_image=card_image_incense, w=150, h=150,
+                pos_x=50, pos_y=220, offest_y=145, offset_x=155, numx=2, numy=4, index=index,
                 destroy_status=DestructionStage.DELAYED_DESTROY
             )
             index += 1
@@ -99,9 +107,11 @@ class GameCore:
 
     def callback_on_press(self, key):
         try:
-            if key.char == 'p':
+            if key.char == '8':
                 self.callback_used_smudge()
-            elif key.char == 'o':
+            elif key.char == '9':
+                self.callback_died()
+            elif key.char == '0':
                 self.callback_reset_data()
         except AttributeError:
             pass
@@ -113,6 +123,12 @@ class GameCore:
         if not self.is_signed_in(): return
         user_account = self.UserData.return_user_data(username=self.DatabaseUsername, session_code=self.DatabaseSessionCode, wipe_data=False)
         user_account["SMUDGED"] = True
+        self.UserData.save_user_data(self.DatabaseUsername, user_account)
+
+    def callback_died(self, thread_index=-1, args=None):
+        if not self.is_signed_in(): return
+        user_account = self.UserData.return_user_data(username=self.DatabaseUsername, session_code=self.DatabaseSessionCode, wipe_data=False)
+        user_account["DIED"] = True
         self.UserData.save_user_data(self.DatabaseUsername, user_account)
 
     def is_signed_in(self):

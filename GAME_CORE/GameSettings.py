@@ -5,4 +5,4 @@ class GameSettings:
     window_height = 900
     window_width = 400
     debug_info = True
-    update_gui_per_second = 30
+    update_gui_per_second = 2
