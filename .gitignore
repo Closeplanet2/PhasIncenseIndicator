@@ -1,2 +1,3 @@
 venv/
 build/
+GAME_CORE/GameCore.py
