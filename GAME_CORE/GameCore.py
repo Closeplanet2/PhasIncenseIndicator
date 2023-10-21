@@ -4,6 +4,7 @@ from CORES.MongoController import MongoController
 from GAME_CORE.GameSettings import GameSettings
 from GAME_CORE.UserData import UserData
 import time
+import os
 
 class GameCore:
     def __init__(self):
@@ -77,14 +78,15 @@ class GameCore:
         index = 0
         for user_data in self.UserData.return_all_user_data():
             if not user_data['SESSION_CODE'] == self.DatabaseSessionCode: continue
-            card_image_player = f"IMAGES/ProfileImages/{user_data['USERNAME']}.png" if not user_data['DIED'] else f"IMAGES/ProfileImages/{user_data['USERNAME']}Dead.png"
+            image_root = "../IMAGES" if self.GameSettings.final_build else "IMAGES"
+            card_image_player = f"{image_root}/ProfileImages/{user_data['USERNAME']}.png" if not user_data['DIED'] else f"{image_root}/ProfileImages/{user_data['USERNAME']}Dead.png"
             self.TkinterController.add_image_as_grid(
                 card_image=card_image_player, w=150, h=150,
                 pos_x=50, pos_y=220, offest_y=145, offset_x=155, numx=2, numy=4, index=index,
                 destroy_status=DestructionStage.DELAYED_DESTROY
             )
             index += 1
-            card_image_incense = "IMAGES/Incense.png" if not user_data['SMUDGED'] else "IMAGES/UsedIncense.png"
+            card_image_incense = f"{image_root}/Incense.png" if not user_data['SMUDGED'] else f"{image_root}/UsedIncense.png"
             self.TkinterController.add_image_as_grid(
                 card_image=card_image_incense, w=150, h=150,
                 pos_x=50, pos_y=220, offest_y=145, offset_x=155, numx=2, numy=4, index=index,

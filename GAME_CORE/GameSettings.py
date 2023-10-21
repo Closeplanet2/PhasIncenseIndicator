@@ -6,3 +6,4 @@ class GameSettings:
     window_width = 400
     debug_info = True
     update_gui_per_second = 2
+    final_build = True
